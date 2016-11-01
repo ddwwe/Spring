@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="android">
+
+	<select id="login" parameterType="hashmap" resultType="SupervisorDTO">
+	select ssid,spw
+	from supervisor
+	where ssid = #{userid} and spw = #{passwd}
+	</select>
+	
+	<select id="selectSS" parameterType="string" resultType="Schedule_SupervisorDTO">
+	SELECT *
+	FROM SCHEDULE_SUPERVISOR
+	where upper(ssid) = upper(#{ssid})
+	</select>
+	
+	<select id="selectTS" parameterType="string" resultType="Test_ScheduleDTO">
+	SELECT tsno, tstitle, to_char(tpdate, 'yyyy.mm.dd') tpdate
+	FROM TEST_SCHEDULE
+	where tsno = #{tsno}
+	</select>
+		
+	<select id="selectQ" parameterType="string" resultMap="QualificationMap">
+	select QCODE, QNAME, QFIELD, QCLASS, WSNAME
+	from QUALIFICATION
+	JOIN WRITE_SUBJECT
+	USING (QCODE)
+	WHERE QCODE = #{qcode}
+	</select>
+	
+	<select id="license" parameterType="string" resultType="string">
+	select qcode from license
+	where eid = #{eid}
+	</select>
+	
+	<select id="selectE" parameterType="string" resultType="ExamineeDTO">
+	select ENO, EXAMINEE.EID, ENAME, TO_CHAR(EBIRTH, 'YYYY-MM-DD') EBRITH, QUALIFICATION.QCODE, QUALIFICATION.QNAME, SUBSTR(ENO, 9, 2) SEAT
+	from TEST_IDENTIFICATION_SLIP, QUALIFICATION, EXAMINEE
+	WHERE TEST_IDENTIFICATION_SLIP.QCODE = QUALIFICATION.QCODE AND EXAMINEE.EID = TEST_IDENTIFICATION_SLIP.EID 
+	AND SUBSTR(ENO, 0, 8) = (select S_CODE from SCHEDULE_SUPERVISOR WHERE UPPER(SSID) = UPPER(#{ssid}))
+	AND SUBSTR(ENO, 11, 4) = (select TSNO from SCHEDULE_SUPERVISOR WHERE UPPER(SSID) = UPPER(#{ssid}))
+	</select>
+	
+	<select id="supervisorInfo" parameterType="string" resultMap="supervisorMap">
+	select ssid,spw,sname,sgroup,sphone, spost, saddr1, saddr2
+    , to_char(sbirth, 'yyyy-mm-dd') sbirth, spath, s_code, s_bonboo, s_gigwan, s_name, s_room
+	from supervisor, school
+	where ssid = #{ssid} and  s_code = (select s_code from SCHEDULE_SUPERVISOR where ssid = #{ssid})
+	</select>
+	
+	<update id="update" parameterType="Personal_DataDTO">
+	update personal_data
+	set ptype = upper(#{ptype}), pattendance = upper(#{pattendance})
+	where ppno = #{ppno}
+	</update>
+	
+	<resultMap id="Write_SubjectMap" type="Write_SubjectDTO">
+		<result property="wscode" column="qcode" />
+		<result property="wsname" column="wsname"/>
+	</resultMap>
+	
+	<resultMap id="QualificationMap" type="QualificationDTO">
+		<id property="qcode" column="qcode" />
+		<result property="qname" column="qname"/>
+		<result property="qfield" column="qfield"/>
+		<result property="qclass" column="qclass"/>
+		<collection property="wslist" resultMap="Write_SubjectMap" />
+	</resultMap>
+	
+	<resultMap type="SchoolDTO" id="schoolMap">
+		<id property="s_code" column="s_code" />
+		<result property="s_bonboo" column="s_bonboo"/>
+		<result property="s_gigwan" column="s_gigwan"/>
+		<result property="s_name" column="s_name"/>
+		<result property="s_room" column="s_room"/>
+	</resultMap>
+	
+	<resultMap type="SupervisorDTO" id="supervisorMap">
+		<id property="ssid" column="ssid" />
+		<result property="spw" column="spw"/>
+		<result property="sname" column="sname"/>
+		<result property="sgroup" column="sgroup"/>
+		<result property="sphone" column="sphone"/>
+		<result property="spost" column="spost"/>
+		<result property="saddr1" column="saddr1"/>
+		<result property="saddr2" column="saddr2"/>
+		<result property="sbirth" column="sbirth"/>
+		<result property="spath" column="spath"/>
+		<association property="dtos" resultMap="schoolMap"></association>
+	</resultMap>
+	
+
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
